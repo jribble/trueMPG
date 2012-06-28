@@ -5,11 +5,13 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.googlecode.objectify.annotation.Indexed;
+
 @Entity
 public class Fillup {
 	
 	@Id Long fillupId;
-	Long vehicleId;
+	@Indexed Long vehicleId;
 	Date date;
 	Double quantity;
 	Long mileage;

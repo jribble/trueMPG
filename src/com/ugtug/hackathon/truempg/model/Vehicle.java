@@ -3,10 +3,12 @@ package com.ugtug.hackathon.truempg.model;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.googlecode.objectify.annotation.Indexed;
+
 @Entity
 public class Vehicle {
 
-	String userId;
+	@Indexed String userId;
 	@Id Long vehicleId;
 	Integer year;
 	String make;
