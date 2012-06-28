@@ -1,5 +1,7 @@
 package com.ugtug.hackathon.truempg.rest;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -23,13 +25,15 @@ import com.ugtug.hackathon.truempg.model.Fillup;
 
 @Path("/fillups")
 public class FillupService {
+	private static final SimpleDateFormat sdf = new SimpleDateFormat ( "yyyy-MM-dd" );
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Fillup> getVehicleFillups(@QueryParam("vehicleId") String vehicleId) {
+	public List<Fillup> getVehicleFillups(@QueryParam("vehicleId") Long vehicleId) {
 		Objectify ofy = ObjectifyService.begin();
 		Query<Fillup> q = ofy.query(Fillup.class);
 		if ( vehicleId != null ) q.filter("vehicleId", vehicleId);
+		q.order("-date");
 		Iterable<Fillup> FillupIt = q.fetch();
 		ArrayList<Fillup> Fillups = new ArrayList<Fillup> ( );
 		for (Fillup v : FillupIt) {
@@ -52,11 +56,21 @@ public class FillupService {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Fillup createFillup(@FormParam("vehicleId") Long vehicleId,
-			@FormParam("date") Date date,
+			@FormParam("date") String dateAsString,
 			@FormParam("quantity") Double quantity,
 			@FormParam("mileage") Long mileage,
 			@FormParam("latitude") Long latitude,
 			@FormParam("longitude") Long longitude) {
+
+	    Date date = new Date ();
+		try {
+			if ( dateAsString != null ) {
+				date = sdf.parse(dateAsString);
+			}
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		Fillup fillup = new Fillup ( vehicleId, date, quantity, mileage, latitude, longitude );
 		Objectify ofy = ObjectifyService.begin();
