@@ -17,7 +17,9 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
+import com.ugtug.hackathon.truempg.model.Fillup;
 import com.ugtug.hackathon.truempg.model.Vehicle;
+import com.ugtug.hackathon.truempg.model.VehicleMPG;
 
 
 @Path("/vehicles")
@@ -62,5 +64,41 @@ public class VehicleService {
 		return ofy.get(key);
 		
 	}
+	
+	@GET
+	@Path("/{vehicleId}/mpg")
+	@Produces(MediaType.APPLICATION_JSON)
+	public VehicleMPG calculateVehicleMPG(@PathParam("vehicleId") Long vehicleId) {
+		VehicleMPG vmpg = new VehicleMPG ( );
+		
+		// get all of the fillups, sorted descending by date
+		List<Fillup> fillups = (new FillupService()).getVehicleFillups(vehicleId);
+		
+		// if there are less than 2, return null for mpgs because we don't know
+		if ( fillups.size() >= 2 ) {
+			// calc last mpgs between fillups putting onto list
+			List<Double> mpgs = new ArrayList<Double> ( fillups.size() );
+			for ( int i=0;i<fillups.size()-1;i++) {
+				Fillup f2 = fillups.get(i);
+				Fillup f1 = fillups.get(i+1);
+				Long miles = f2.getMileage() - f1.getMileage();
+				Double quantity = f2.getQuantity();
+				Double mpg = miles/quantity;
+				mpgs.add(mpg);
+			}
+			// the first one is the last mpg
+			vmpg.setLastMpg(mpgs.get(0));
+			
+			// average all of them
+			Double mpgTotal = 0.0;
+			for ( Double mpg : mpgs ) {
+				mpgTotal = mpgTotal + mpg;
+			}
+			vmpg.setVehicleAverageMpg(mpgTotal/mpgs.size());
+		}
+		// return the results
+		return vmpg;
+	}
+	
 
 }
