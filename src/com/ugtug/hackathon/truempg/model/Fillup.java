@@ -2,17 +2,19 @@ package com.ugtug.hackathon.truempg.model;
 
 import java.util.Date;
 
+import javax.persistence.Entity;
 import javax.persistence.Id;
 
+@Entity
 public class Fillup {
 	
-	private Long fillupId;
-	@Id Long vehicleId;
-	private Date date;
-	private Double quantity;
-	private Long mileage;
-	private Long latitude;
-	private Long longitude;
+	@Id Long fillupId;
+	Long vehicleId;
+	Date date;
+	Double quantity;
+	Long mileage;
+	Long latitude;
+	Long longitude;
 	
 	@SuppressWarnings("unused")
 	private Fillup (){}
