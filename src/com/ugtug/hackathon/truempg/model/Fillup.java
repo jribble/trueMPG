@@ -9,7 +9,7 @@ public class Fillup {
 	private Long fillupId;
 	@Id Long vehicleId;
 	private Date date;
-	private Integer quantity;
+	private Double quantity;
 	private Long mileage;
 	private Long latitude;
 	private Long longitude;
@@ -17,7 +17,7 @@ public class Fillup {
 	@SuppressWarnings("unused")
 	private Fillup (){}
 	
-	public Fillup ( Long vehicleId, Date date, Integer quantity, Long mileage, Long latitude, Long longitude) {
+	public Fillup ( Long vehicleId, Date date, Double quantity, Long mileage, Long latitude, Long longitude) {
 		this.vehicleId = vehicleId;
 		this.date = date;
 		this.quantity = quantity;
@@ -44,10 +44,10 @@ public class Fillup {
 	public void setDate(Date date) {
 		this.date = date;
 	}
-	public Integer getQuantity() {
+	public Double getQuantity() {
 		return quantity;
 	}
-	public void setQuantity(Integer quantity) {
+	public void setQuantity(Double quantity) {
 		this.quantity = quantity;
 	}
 	public Long getMileage() {

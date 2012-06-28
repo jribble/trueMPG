@@ -53,7 +53,7 @@ public class FillupService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Fillup createFillup(@FormParam("vehicleId") Long vehicleId,
 			@FormParam("date") Date date,
-			@FormParam("quantity") Integer quantity,
+			@FormParam("quantity") Double quantity,
 			@FormParam("mileage") Long mileage,
 			@FormParam("latitude") Long latitude,
 			@FormParam("longitude") Long longitude) {
