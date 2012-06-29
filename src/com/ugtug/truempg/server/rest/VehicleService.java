@@ -13,7 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.google.appengine.api.users.User;
+//import com.google.appengine.api.users.User;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
@@ -31,7 +31,7 @@ public class VehicleService extends BaseService {
 	public List<Vehicle> getUserVehicles(@QueryParam("userId") String userId) {
 		Objectify ofy = ObjectifyService.begin();
 		Query<Vehicle> q = ofy.query(Vehicle.class);
-		User user = getUser();
+		//User user = getUser();
 		//if ( user != null ) q.filter ( "userId", user.getEmail() );
 		//else if ( userId != null ) q.filter ( "userId", userId );
 		if ( userId != null ) q.filter ( "userId", userId );
