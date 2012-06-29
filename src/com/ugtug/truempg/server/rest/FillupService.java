@@ -59,8 +59,8 @@ public class FillupService {
 			@FormParam("date") String dateAsString,
 			@FormParam("quantity") Double quantity,
 			@FormParam("mileage") Long mileage,
-			@FormParam("latitude") Long latitude,
-			@FormParam("longitude") Long longitude) {
+			@FormParam("latitude") Double latitude,
+			@FormParam("longitude") Double longitude) {
 
 	    Date date = new Date ();
 		try {

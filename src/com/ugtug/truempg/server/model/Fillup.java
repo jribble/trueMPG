@@ -13,13 +13,13 @@ public class Fillup {
 	Date date;
 	Double quantity;
 	Long mileage;
-	Long latitude;
-	Long longitude;
+	Double latitude;
+	Double longitude;
 	
 	@SuppressWarnings("unused")
 	private Fillup (){}
 	
-	public Fillup ( Long vehicleId, Date date, Double quantity, Long mileage, Long latitude, Long longitude) {
+	public Fillup ( Long vehicleId, Date date, Double quantity, Long mileage, Double latitude, Double longitude) {
 		this.vehicleId = vehicleId;
 		this.date = date;
 		this.quantity = quantity;
@@ -58,16 +58,16 @@ public class Fillup {
 	public void setMileage(Long mileage) {
 		this.mileage = mileage;
 	}
-	public Long getLatitude() {
+	public Double getLatitude() {
 		return latitude;
 	}
-	public void setLatitude(Long latitude) {
+	public void setLatitude(Double latitude) {
 		this.latitude = latitude;
 	}
-	public Long getLongitude() {
+	public Double getLongitude() {
 		return longitude;
 	}
-	public void setLongitude(Long longitude) {
+	public void setLongitude(Double longitude) {
 		this.longitude = longitude;
 	}
 
