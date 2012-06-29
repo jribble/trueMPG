@@ -458,7 +458,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
                       
                       if (jsonArray != null) {
                         parseVehicleJSON(jsonArray);
-                        //getVehicleList();
+                        fillVehicleList();
                       } else {
                         throw new JSONException(); 
                       }
