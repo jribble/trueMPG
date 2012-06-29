@@ -13,6 +13,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.appengine.api.users.User;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
@@ -23,14 +24,16 @@ import com.ugtug.truempg.server.model.VehicleMPG;
 
 
 @Path("/vehicles")
-public class VehicleService {
+public class VehicleService extends BaseService {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Vehicle> getUserVehicles(@QueryParam("userId") String userId) {
 		Objectify ofy = ObjectifyService.begin();
 		Query<Vehicle> q = ofy.query(Vehicle.class);
-		if ( userId != null ) q.filter("userId", userId);
+		User user = getUser();
+		if ( user != null ) q.filter ( "userId", user.getEmail() );
+		else if ( userId != null ) q.filter ( "userId", userId );
 		Iterable<Vehicle> vehicleIt = q.fetch();
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle> ( );
 		for (Vehicle v : vehicleIt) {
@@ -58,7 +61,8 @@ public class VehicleService {
 			@FormParam("model") String model,
 			@FormParam("vin") String vin) {
 		
-		Vehicle vehicle = new Vehicle ( userId, year, make, model, vin );
+		User user = getUser();
+		Vehicle vehicle = new Vehicle ( user == null ? userId : user.getEmail(), year, make, model, vin );
 		Objectify ofy = ObjectifyService.begin();
 		Key<Vehicle> key = ofy.put(vehicle);
 		return ofy.get(key);
