@@ -438,7 +438,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void readVehicleForUser()
     {
-        String url = "/rest/vehicles?userId=test@example.com";
+        String url = "/rest/vehicles?userId=" + userName;
         RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
 
