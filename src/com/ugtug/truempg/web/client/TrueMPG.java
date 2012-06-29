@@ -177,34 +177,6 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     }
 
     /**
-     * Gets the vehicle list with vehicles for user.
-     */
-    private void getVehicleList()
-    {
-        readVehicleForUser();
-
-        if (myVehicles.getVehicleCount() > 0)
-        {
-            // set drop down for fill up
-            for (int i=0; i<myVehicles.getVehicleCount(); i++)
-                lbVehicle.addItem(myVehicles.getMyList().get(i).getVehicleName());
-
-            lbVehicle.setVisibleItemCount(1);
-            lbVehicle.setSelectedIndex(0);
-            chosenVehicle = myVehicles.getMyList().get(0).getVehicleName();
-
-            fillVehicleLists();            
-            mainMenu.selectTab(fillOuterVP);       // go to this tab if user has vehicles
-        }
-        else
-        {
-            mainMenu.selectTab(vehicleOuterVP);      // else show vehicle list
-        }
-
-
-    }
-
-    /**
      * Fill the vehicle list with vehicles for user.
      */
     private void fillVehicleLists()
@@ -332,6 +304,14 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             mainMenu.add(aboutFP, "About");
 
             readVehicleForUser();       // get list of vehicles for user
+            if (myVehicles.getVehicleCount() > 0)
+            {        
+                mainMenu.selectTab(fillOuterVP);       // go to this tab if user has vehicles
+            }
+            else
+            {
+                mainMenu.selectTab(vehicleOuterVP);      // else show vehicle list
+            }
         }
         else if (sender == logoutButton)
         {
