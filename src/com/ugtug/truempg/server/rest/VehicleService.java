@@ -1,4 +1,4 @@
-package com.ugtug.hackathon.truempg.rest;
+package com.ugtug.truempg.server.rest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +17,9 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
-import com.ugtug.hackathon.truempg.model.Fillup;
-import com.ugtug.hackathon.truempg.model.Vehicle;
-import com.ugtug.hackathon.truempg.model.VehicleMPG;
+import com.ugtug.truempg.server.model.Fillup;
+import com.ugtug.truempg.server.model.Vehicle;
+import com.ugtug.truempg.server.model.VehicleMPG;
 
 
 @Path("/vehicles")

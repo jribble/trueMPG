@@ -1,4 +1,4 @@
-package com.ugtug.hackathon.truempg.model;
+package com.ugtug.truempg.server.model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

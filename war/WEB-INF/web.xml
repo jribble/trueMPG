@@ -8,11 +8,11 @@ http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	<servlet>
 		<servlet-name>jersey-serlvet</servlet-name>
 		<servlet-class>
-                     com.ugtug.hackathon.truempg.TrueMPGServlet
+                     com.ugtug.truempg.server.TrueMPGServlet
                 </servlet-class>
 		<init-param>
 		     <param-name>com.sun.jersey.config.property.packages</param-name>
-		     <param-value>com.ugtug.hackathon.truempg.rest</param-value>
+		     <param-value>com.ugtug.truempg.server.rest</param-value>
 		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>

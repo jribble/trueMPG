@@ -1,4 +1,4 @@
-package com.ugtug.hackathon.truempg.rest;
+package com.ugtug.truempg.server.rest;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,7 +20,7 @@ import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
-import com.ugtug.hackathon.truempg.model.Fillup;
+import com.ugtug.truempg.server.model.Fillup;
 
 
 @Path("/fillups")
