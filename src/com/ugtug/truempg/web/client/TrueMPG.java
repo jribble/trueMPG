@@ -86,7 +86,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 
     private String chosenVehicle;                                           // chosen vehicle name
     private String userName;                                                // user name
-    private VehicleList myVehicles;                                         // list of vehicles for this user
+    private VehicleList myVehicles = new VehicleList();                     // list of vehicles for this user
 
 
     /**
