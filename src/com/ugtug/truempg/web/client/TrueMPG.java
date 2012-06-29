@@ -469,7 +469,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
 
         try {
-          Request request = builder.sendRequest(null, new RequestCallback() {
+          builder.sendRequest(null, new RequestCallback() {
             public void onError(Request request, Throwable exception) {
                // Couldn't connect to server (could be timeout, SOP violation, etc.)  
                 displayError("Couldn't retrieve JSON - oh no");   
