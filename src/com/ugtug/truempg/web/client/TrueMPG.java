@@ -247,7 +247,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 
         lbVehicle.setVisibleItemCount(1);
         lbVehicle.setSelectedIndex(0);
-        chosenVehicle = myVehicles.getMyList().get(0).getVehicleName();
+        chosenVehicle = myVehicles.getVehicleCount() == 0 ? null : myVehicles.getMyList().get(0).getVehicleName();
     }
 
     /**
