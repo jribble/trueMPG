@@ -453,7 +453,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
               if (200 == response.getStatusCode()) {
                   try {
                       // parse the response text into JSON
-                      JSONValue jsonValue = JSONParser.parse(response.getText());
+                      JSONValue jsonValue = JSONParser.parseStrict(response.getText());
                       JSONArray jsonArray = jsonValue.isArray();
                       
                       if (jsonArray != null) {
