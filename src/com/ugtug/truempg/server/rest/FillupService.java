@@ -21,6 +21,8 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
 import com.ugtug.truempg.server.model.Fillup;
+import com.ugtug.truempg.server.model.MPGRecord;
+import com.ugtug.truempg.server.model.Vehicle;
 
 
 @Path("/fillups")
@@ -75,8 +77,21 @@ public class FillupService {
 		Fillup fillup = new Fillup ( vehicleId, date, quantity, mileage, latitude, longitude );
 		Objectify ofy = ObjectifyService.begin();
 		Key<Fillup> key = ofy.put(fillup);
-		return ofy.get(key);
+		fillup = ofy.get(key);
 		
+		// create an MPGRecord for this if needed
+		List<Fillup> fillups = getVehicleFillups ( vehicleId );
+		if ( fillups.size() > 0 && fillups.get(0).getFillupId().equals(fillup.getFillupId())) {
+			if ( fillups.size() > 1 ) {
+				Fillup f2 = fillup;
+				Fillup f1 = fillups.get(1);
+				Vehicle v = (new VehicleService()).getVehicle(vehicleId);
+				MPGRecord mpgr = new MPGRecord ( v, f1, f2 );
+				ofy.put(mpgr);
+			}
+		}
+		
+		return fillup;
 	}
 
 }
