@@ -350,39 +350,44 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         }
         else if (sender == postVehicleButton)
         {
-        	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/vehicles" );
-            builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
-        	String vehicleString = setVehicle(userName, tbYear.getValue(), tbMake.getValue(), tbModel.getValue(), tbVIN.getValue());
-
-			try {
-				Request request = builder.sendRequest(vehicleString,
-						new RequestCallback() {
-							public void onError(Request request,
-									Throwable exception) {
-								// Couldn't connect to server (could be timeout,
-								// SOP violation, etc.)
-								displayError("Couldn't create vehicle.");
-							}
-
-							public void onResponseReceived(Request request,
-									Response response) {
-								if (200 == response.getStatusCode()) {			            
-						            // go back to list
-						            addVehicleVP.setVisible(false);
-						            //TODO need to add new car to list
-						            vehicleVP.setVisible(true);
-						            readVehicleForUser();
-								} else {
-									displayError("Error creating vehicle ("
-											+ response.getStatusText() + ")");
-								}
-							}
-						});
-			} catch (RequestException e) {
-				displayError("Couldn't retrieve JSON - " + e.getMessage()
-						+ e.getStackTrace());
-			}
+        	postNewVehicle();
         }  
+    }
+    
+    private void postNewVehicle()
+    {
+    	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/vehicles" );
+        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+    	String vehicleString = setVehicle(userName, tbYear.getValue(), tbMake.getValue(), tbModel.getValue(), tbVIN.getValue());
+
+		try {
+			builder.sendRequest(vehicleString,
+					new RequestCallback() {
+						public void onError(Request request,
+								Throwable exception) {
+							// Couldn't connect to server (could be timeout,
+							// SOP violation, etc.)
+							displayError("Couldn't create vehicle.");
+						}
+
+						public void onResponseReceived(Request request,
+								Response response) {
+							if (200 == response.getStatusCode()) {			            
+					            // go back to list
+					            addVehicleVP.setVisible(false);
+					            //TODO need to add new car to list
+					            vehicleVP.setVisible(true);
+					            readVehicleForUser();
+							} else {
+								displayError("Error creating vehicle ("
+										+ response.getStatusText() + ")");
+							}
+						}
+					});
+		} catch (RequestException e) {
+			displayError("Couldn't retrieve JSON - " + e.getMessage()
+					+ e.getStackTrace());
+		}
     }
 
     /**
