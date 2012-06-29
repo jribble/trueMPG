@@ -32,8 +32,9 @@ public class VehicleService extends BaseService {
 		Objectify ofy = ObjectifyService.begin();
 		Query<Vehicle> q = ofy.query(Vehicle.class);
 		User user = getUser();
-		if ( user != null ) q.filter ( "userId", user.getEmail() );
-		else if ( userId != null ) q.filter ( "userId", userId );
+		//if ( user != null ) q.filter ( "userId", user.getEmail() );
+		//else if ( userId != null ) q.filter ( "userId", userId );
+		if ( userId != null ) q.filter ( "userId", userId );
 		Iterable<Vehicle> vehicleIt = q.fetch();
 		ArrayList<Vehicle> vehicles = new ArrayList<Vehicle> ( );
 		for (Vehicle v : vehicleIt) {
@@ -61,8 +62,9 @@ public class VehicleService extends BaseService {
 			@FormParam("model") String model,
 			@FormParam("vin") String vin) {
 		
-		User user = getUser();
-		Vehicle vehicle = new Vehicle ( user == null ? userId : user.getEmail(), year, make, model, vin );
+		//User user = getUser();
+		//Vehicle vehicle = new Vehicle ( user == null ? userId : user.getEmail(), year, make, model, vin );
+		Vehicle vehicle = new Vehicle ( userId, year, make, model, vin );
 		Objectify ofy = ObjectifyService.begin();
 		Key<Vehicle> key = ofy.put(vehicle);
 		return ofy.get(key);
