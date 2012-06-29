@@ -383,7 +383,6 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      * Puts together form string for post for Fillup.
      */
     private void parseVehicleJSON(JSONArray array) {
-        Vehicle myCar = new Vehicle();
         JSONValue jsonValue;
         myVehicles = new VehicleList();
         
@@ -395,25 +394,26 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
           if ((jsCar = array.get(i).isObject()) == null) continue;
           
           if ((jsonValue = jsCar.get("make")) == null) continue;
-          if ((jsMake = jsonValue.isString()) == null) continue;
+          jsMake = jsonValue.isString();
           
           if ((jsonValue = jsCar.get("model")) == null) continue;
-          if ((jsModel = jsonValue.isString()) == null) continue;
+          jsModel = jsonValue.isString();
           
           if ((jsonValue = jsCar.get("vin")) == null) continue;
-          if ((jsVIN = jsonValue.isString()) == null) continue;
+          jsVIN = jsonValue.isString();
           
           if ((jsonValue = jsCar.get("year")) == null) continue;
-          if ((jsYear = jsonValue.isNumber()) == null) continue;
+          jsYear = jsonValue.isNumber();
           
           if ((jsonValue = jsCar.get("vehicleId")) == null) continue;
-          if ((jsVehicleID = jsonValue.isNumber()) == null) continue;
-          
-          myCar.setMake(jsMake.stringValue());
-          myCar.setVehicleYear(Double.toString(jsYear.getValue()));
-          myCar.setVehicleID(Double.toString(jsVehicleID.getValue()));
-          myCar.setModel(jsModel.stringValue());
-          myCar.setVehicleID(jsVIN.stringValue());
+          jsVehicleID = jsonValue.isNumber();
+
+          Vehicle myCar = new Vehicle();
+          myCar.setMake(jsMake == null ? null : jsMake.stringValue());
+          myCar.setVehicleYear(jsYear == null ? null : jsYear.toString());
+          myCar.setVehicleID(jsVehicleID == null ? null : jsVehicleID.toString());
+          myCar.setModel(jsModel == null ? null : jsModel.stringValue());
+          myCar.setVin(jsVIN == null ? null : jsVIN.stringValue());
           myVehicles.addVehicle(myCar);
         }
 
@@ -438,7 +438,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void readVehicleForUser()
     {
-        String url = "http://truefuelefficiency.appspot.com/rest/vehicles?userId=test1@example.com";
+        String url = "/rest/vehicles?userId=test@example.com";
         RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
 
@@ -458,7 +458,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
                       
                       if (jsonArray != null) {
                         parseVehicleJSON(jsonArray);
-                        getVehicleList();
+                        //getVehicleList();
                       } else {
                         throw new JSONException(); 
                       }
