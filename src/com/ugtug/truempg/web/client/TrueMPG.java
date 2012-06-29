@@ -181,17 +181,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void getVehicleList()
     {
-        //TODO read vehicles for user from database
         readVehicleForUser();
-        
-        
-       
-
-        // mock up vehicles for now
-        Vehicle mycar1 = new Vehicle("0001", "2001", "Dodge", "Durango", "VIN12932195835");
-        Vehicle mycar2 = new Vehicle("0002", "2009", "Toyota", "Corolla", "VIN9345384583534");
-        myVehicles.addVehicle(mycar1);
-        myVehicles.addVehicle(mycar2);
 
         if (myVehicles.getVehicleCount() > 0)
         {
@@ -203,7 +193,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             lbVehicle.setSelectedIndex(0);
             chosenVehicle = myVehicles.getMyList().get(0).getVehicleName();
 
-            fillVehicleList();            
+            fillVehicleLists();            
             mainMenu.selectTab(fillOuterVP);       // go to this tab if user has vehicles
         }
         else
@@ -217,6 +207,12 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     /**
      * Fill the vehicle list with vehicles for user.
      */
+    private void fillVehicleLists()
+    {
+    	fillVehicleList();
+    	fillVehicleDropDown();
+    }
+    
     private void fillVehicleList()
     {
         vehicleVP.clear();
@@ -238,6 +234,20 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 
         vehicleVP.add(gVehicleList);
         vehicleVP.add(addVehicleButton);
+    }
+    
+    private void fillVehicleDropDown()
+    {
+        // set drop down for fill up
+    	lbVehicle.clear();
+        for (int i=0; i<myVehicles.getVehicleCount(); i++) {
+        	Vehicle v = myVehicles.getMyList().get(i);
+            lbVehicle.addItem(v.getVehicleYear() + " " + v.getMake() + " " + v.getModel(), v.getVehicleID());
+        }
+
+        lbVehicle.setVisibleItemCount(1);
+        lbVehicle.setSelectedIndex(0);
+        chosenVehicle = myVehicles.getMyList().get(0).getVehicleName();
     }
 
     /**
@@ -483,7 +493,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
                       
                       if (jsonArray != null) {
                         parseVehicleJSON(jsonArray);
-                        fillVehicleList();
+                        fillVehicleLists();
                       } else {
                         throw new JSONException(); 
                       }
