@@ -316,6 +316,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             else
             {
                 mainMenu.selectTab(vehicleOuterVP);      // else show vehicle list
+                addNewVehicle();
             }
         }
         else if (sender == logoutButton)
