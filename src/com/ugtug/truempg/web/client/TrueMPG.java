@@ -83,6 +83,11 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     private HTML hdgMake = new HTML("Make");
     private HTML hdgModel = new HTML("Model");
     private HTML hdgVIN = new HTML("VIN Number");
+    
+    private HTML hdgYearNew = new HTML("Year");
+    private HTML hdgMakeNew = new HTML("Make");
+    private HTML hdgModelNew = new HTML("Model");
+    private HTML hdgVINNew = new HTML("VIN Number");
 
     private String chosenVehicle;                                           // chosen vehicle name
     private String userName;                                                // user name
@@ -228,13 +233,13 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     private void addNewVehicle()
     {
         Grid gAddNew = new Grid(4, 3);
-        gAddNew.setWidget(0, 1, hdgYear);
+        gAddNew.setWidget(0, 1, hdgYearNew);
         gAddNew.setWidget(0, 2, tbYear);
-        gAddNew.setWidget(1, 1, hdgMake);
+        gAddNew.setWidget(1, 1, hdgMakeNew);
         gAddNew.setWidget(1, 2, tbMake);
-        gAddNew.setWidget(2, 1, hdgModel);
+        gAddNew.setWidget(2, 1, hdgModelNew);
         gAddNew.setWidget(2, 2, tbModel);
-        gAddNew.setWidget(3, 1, hdgVIN);
+        gAddNew.setWidget(3, 1, hdgVINNew);
         gAddNew.setWidget(3, 2, tbVIN);
         
         HTML hdgAddNew = new HTML("Add new vehicle");
