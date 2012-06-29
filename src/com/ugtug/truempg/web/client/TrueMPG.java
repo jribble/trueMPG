@@ -355,12 +355,38 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         }
         else if (sender == postVehicleButton)
         {
-            //TODO post/save new vehicle to database
-            
-            // go back to list
-            addVehicleVP.setVisible(false);
-            //TODO need to add new car to list
-            vehicleVP.setVisible(true);
+        	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/vehicles" );
+            builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+        	String vehicleString = setVehicle(userName, tbYear.getValue(), tbMake.getValue(), tbModel.getValue(), tbVIN.getValue());
+
+			try {
+				Request request = builder.sendRequest(vehicleString,
+						new RequestCallback() {
+							public void onError(Request request,
+									Throwable exception) {
+								// Couldn't connect to server (could be timeout,
+								// SOP violation, etc.)
+								displayError("Couldn't create vehicle.");
+							}
+
+							public void onResponseReceived(Request request,
+									Response response) {
+								if (200 == response.getStatusCode()) {			            
+						            // go back to list
+						            addVehicleVP.setVisible(false);
+						            //TODO need to add new car to list
+						            vehicleVP.setVisible(true);
+						            readVehicleForUser();
+								} else {
+									displayError("Error creating vehicle ("
+											+ response.getStatusText() + ")");
+								}
+							}
+						});
+			} catch (RequestException e) {
+				displayError("Couldn't retrieve JSON - " + e.getMessage()
+						+ e.getStackTrace());
+			}
         }  
     }
 
@@ -422,12 +448,11 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     /**
      * Puts together form string for post for new vehicle.
      */
-    private String setVehicle(String inVehicleID, String inYear, String inMake, String inModel, 
-            String inVIN)
+    private String setVehicle(String userId, String inYear, String inMake, String inModel, String inVIN)
     {
         final String formString;
 
-        formString = "vehicleId=" + inVehicleID  + "&year=" + inYear +
+        formString = "userId=" + userId + "&year=" + inYear +
         "&make=" + inMake + "&model="+inModel + "&vin="+inVIN;
 
         return formString;
