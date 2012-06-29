@@ -337,9 +337,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         }
         else if (sender == sendButton)
         {
-            //TODO need to post fill up to database
-
-            showMPGResults();
+        	postNewFillup();
         }
         else if (sender == againButton)
         {
@@ -390,18 +388,55 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 					+ e.getStackTrace());
 		}
     }
+    
+    private void postNewFillup()
+    {
+    	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/fillups" );
+        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+        int vidx = lbVehicle.getSelectedIndex();
+        if ( vidx == -1 ) return;
+    	String fillupString = setFillup(lbVehicle.getValue(vidx), null, tbGallons.getValue(), tbOdometer.getValue(), null, null);
+
+		try {
+			builder.sendRequest(fillupString,
+					new RequestCallback() {
+						public void onError(Request request,
+								Throwable exception) {
+							// Couldn't connect to server (could be timeout,
+							// SOP violation, etc.)
+							displayError("Couldn't create fillup.");
+						}
+
+						public void onResponseReceived(Request request,
+								Response response) {
+							if (200 == response.getStatusCode()) {	
+								// show MPG
+					            showMPGResults();
+							} else {
+								displayError("Error creating fillup ("
+										+ response.getStatusText() + ")");
+							}
+						}
+					});
+		} catch (RequestException e) {
+			displayError("Couldn't retrieve JSON - " + e.getMessage()
+					+ e.getStackTrace());
+		}
+    }
 
     /**
      * Puts together form string for post for Fillup.
      */
-    private String setFillup(String inFillupID, String inVehicleID, String inFillDate, String inGallons, String inMileage, 
+    private String setFillup(String inVehicleID, String inFillDate, String inGallons, String inMileage, 
             String inLatitude, String inLongitude)
     {
-        final String formString;
+        String formString;
 
-        formString = "fillupId=" + inFillupID + "&vehicleId=" + inVehicleID  + "&date=" + inFillDate +
-        "&quantity=" + inGallons + "&mileage="+inMileage + "&latitude="+inLatitude +
-        "&longitude=" + inLongitude;
+        formString = "vehicleId=" + inVehicleID;
+        if ( inFillDate != null ) formString = formString + "&date=" + inFillDate;
+        formString = formString + "&quantity=" + inGallons + "&mileage="+inMileage;
+        if ( inLatitude != null ) formString = formString + "&latitude="+inLatitude;
+        if ( inLongitude != null ) formString = formString + "&longitude=" + inLongitude;
 
         return formString;
     }  
