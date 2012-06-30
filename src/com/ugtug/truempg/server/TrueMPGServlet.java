@@ -5,6 +5,7 @@ import javax.servlet.ServletException;
 import com.googlecode.objectify.ObjectifyService;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import com.ugtug.truempg.server.model.Fillup;
+import com.ugtug.truempg.server.model.MPGAverage;
 import com.ugtug.truempg.server.model.MPGRecord;
 import com.ugtug.truempg.server.model.Vehicle;
 
@@ -22,6 +23,7 @@ public class TrueMPGServlet extends ServletContainer {
 		ObjectifyService.register(Vehicle.class);
 		ObjectifyService.register(Fillup.class);
 		ObjectifyService.register(MPGRecord.class);
+		ObjectifyService.register(MPGAverage.class);
 	}
 	
 	

@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -21,6 +22,7 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Query;
 import com.ugtug.truempg.server.model.Fillup;
+import com.ugtug.truempg.server.model.MPGAverage;
 import com.ugtug.truempg.server.model.MPGRecord;
 import com.ugtug.truempg.server.model.Vehicle;
 
@@ -88,8 +90,37 @@ public class FillupService {
 				Vehicle v = (new VehicleService()).getVehicle(vehicleId);
 				MPGRecord mpgr = new MPGRecord ( v, f1, f2 );
 				ofy.put(mpgr);
+				
+				// update the MPGAverage for this year, make, model
+				Query<MPGAverage> q = ofy.query(MPGAverage.class);
+				q.filter("year", v.getYear());
+				q.filter("make", v.getMake());
+				q.filter("model", v.getModel());
+				Iterable<MPGAverage> mpgaIt = q.fetch();
+				Iterator<MPGAverage> mpgaItr = mpgaIt.iterator();
+				MPGAverage mpga = mpgaItr.hasNext() ? mpgaItr.next() : null;
+				if ( mpga == null ) {
+					mpga = new MPGAverage ( );
+					mpga.setYear ( v.getYear());
+					mpga.setMake ( v.getMake());
+					mpga.setModel( v.getModel());
+					mpga.setTotalMiles(0.0);
+					mpga.setTotalQuantity(0.0);
+					mpga.setAverageMpg(0.0);
+				}
+				double totalMiles = mpga.getTotalMiles();
+				totalMiles = totalMiles + (mpgr.getEndMileage() - mpgr.getStartMileage());
+				double totalQuantity = mpga.getTotalQuantity();
+				totalQuantity = totalQuantity + mpgr.getQuantity();
+				double average = totalMiles/totalQuantity;
+				mpga.setTotalMiles(totalMiles);
+				mpga.setTotalQuantity(totalQuantity);
+				mpga.setAverageMpg(average);
+				ofy.put(mpga);				
 			}
 		}
+		
+		
 		
 		return fillup;
 	}

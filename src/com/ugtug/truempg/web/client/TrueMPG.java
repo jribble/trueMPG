@@ -1,8 +1,12 @@
 package com.ugtug.truempg.web.client;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import com.google.gwt.cell.client.NumberCell;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -14,6 +18,7 @@ import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONException;
 import com.google.gwt.json.client.JSONNumber;
@@ -21,6 +26,10 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -32,6 +41,14 @@ import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.visualization.client.AbstractDataTable;
+import com.google.gwt.visualization.client.AbstractDataTable.ColumnType;
+import com.google.gwt.visualization.client.DataTable;
+import com.google.gwt.visualization.client.Selection;
+import com.google.gwt.visualization.client.events.SelectHandler;
+import com.google.gwt.visualization.client.visualizations.LineChart;
+import com.google.gwt.visualization.client.visualizations.LineChart.Options;
+import com.ugtug.truempg.web.shared.MPGAverage;
 import com.ugtug.truempg.web.shared.Vehicle;
 import com.ugtug.truempg.web.shared.VehicleList;
 
@@ -46,6 +63,18 @@ import com.ugtug.truempg.web.shared.VehicleList;
  */
 public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     private TabLayoutPanel mainMenu = new TabLayoutPanel(1.5, Unit.EM);     // main menu panel
+    
+    // visualization panel
+    private VerticalPanel vizVP = new VerticalPanel();
+    private TextBox tbAvgYear = new TextBox();                               
+    private TextBox tbAvgMake = new TextBox();  
+    private TextBox tbAvgModel = new TextBox();  
+    private HTML hdgAvgYear = new HTML("Year");
+    private HTML hdgAvgMake = new HTML("Make");
+    private HTML hdgAvgModel = new HTML("Model");  
+    private Grid gAvg;                                                      // grid for average data
+    private Button avgButton = new Button("Search");                        // send button for getting averages
+    CellTable<MPGAverage> avgTable = new CellTable<MPGAverage> ( );
 
     // Login panel
     private VerticalPanel loginVP = new VerticalPanel();                    // login panel
@@ -103,6 +132,119 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     private String avgMPG;                                                  // average mpg
 
 
+    private Options createOptions() {
+      Options options = Options.create();
+      options.setWidth(400);
+      options.setHeight(240);
+      options.setTitle("Vehicle MPG");
+      return options;
+    }
+
+    private SelectHandler createSelectHandler(final LineChart chart) {
+      return new SelectHandler() {
+        @Override
+        public void onSelect(SelectEvent event) {
+          String message = "";
+          
+          // May be multiple selections.
+          JsArray<Selection> selections = chart.getSelections();
+
+          for (int i = 0; i < selections.length(); i++) {
+            // add a new line for each selection
+            message += i == 0 ? "" : "\n";
+            
+            Selection selection = selections.get(i);
+
+            if (selection.isCell()) {
+              // isCell() returns true if a cell has been selected.
+              
+              // getRow() returns the row number of the selected cell.
+              int row = selection.getRow();
+              // getColumn() returns the column number of the selected cell.
+              int column = selection.getColumn();
+              message += "cell " + row + ":" + column + " selected";
+            } else if (selection.isRow()) {
+              // isRow() returns true if an entire row has been selected.
+              
+              // getRow() returns the row number of the selected row.
+              int row = selection.getRow();
+              message += "row " + row + " selected";
+            } else {
+              // unreachable
+              message += "Pie chart selections should be either row selections or cell selections.";
+              message += "  Other visualizations support column selections as well.";
+            }
+          }
+          
+          Window.alert(message);
+        }
+      };
+    }
+    
+    /**
+     * Reads vehicles for a user.
+     */
+    private void getMPGRecords()
+    {
+        String url = "/rest/mpgs";
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
+        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+
+        try {
+          builder.sendRequest(null, new RequestCallback() {
+            public void onError(Request request, Throwable exception) {
+               // Couldn't connect to server (could be timeout, SOP violation, etc.)  
+                displayError("Couldn't retrieve JSON - oh no");   
+            }
+
+            public void onResponseReceived(Request request, Response response) {
+              if (200 == response.getStatusCode()) {
+                  try {
+                      // parse the response text into JSON
+                      JSONValue jsonValue = JSONParser.parseStrict(response.getText());
+                      JSONArray jsonArray = jsonValue.isArray();
+                      
+                      if (jsonArray != null) {
+                    	AbstractDataTable data = createMPGTable(jsonArray);
+                        // TODO: fill chart
+                      } else {
+                        throw new JSONException(); 
+                      }
+                    } catch (JSONException e) {
+                      displayError("Could not parse JSON");
+                    }
+                  } else {
+                    displayError("Couldn't retrieve JSON (" + response.getStatusText() + ")");
+                  }
+                }       
+              });
+            } catch (RequestException e) {
+              displayError("Couldn't retrieve JSON - "+e.getMessage()+e.getStackTrace());         
+            }
+    }
+
+    private AbstractDataTable createMPGTable(JSONArray jsonArray) {
+      DataTable data = DataTable.create();
+      data.addColumn(ColumnType.DATE, "Date");
+      data.addColumn(ColumnType.NUMBER, "2004 Dodge Dart");
+      data.addColumn(ColumnType.NUMBER, "1974 Fiat Spider");
+      //if ( jsonArray != null ) {
+      DateTimeFormat dtf = DateTimeFormat.getFormat("yyyy-MM-dd");
+	      data.addRows(4);
+	      data.setValue(0, 0, dtf.parse("2012-06-23"));
+	      data.setValue(0, 1, 13.54);
+	      data.setValue(1, 0, dtf.parse("2012-06-23"));
+	      data.setValue(0, 2, 14.94);
+	      data.setValue(2, 0, dtf.parse("2012-06-25"));
+	      data.setValue(2, 1, 15.2);
+	      //data.setValue(0, 2, (Double)null);
+	      data.setValue(3, 0, dtf.parse("2012-06-29"));
+	      //data.setValue(1, 1, (Double)null);
+	      data.setValue(3, 2, 14.82);
+      //}
+      return data;
+    }
+    
     /**
      * This is the entry point method.
      */
@@ -115,13 +257,80 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         // set up main panel
         DockLayoutPanel appPanel = new DockLayoutPanel(Unit.EM);
         RootLayoutPanel.get().add(appPanel);
-        HTML hdgMain = new HTML("True RPG<br><br>");    
+        HTML hdgMain = new HTML("True MPG<br><br>");    
         hdgMain.setStyleName("bigText");
         appPanel.addNorth(hdgMain, 2);
         appPanel.addWest(new HTML(" "), 2);
         appPanel.add(mainMenu);
 
         // set up individual panels for each tab
+        
+        // visualization panel
+//        Runnable onLoadCallback = new Runnable() {
+//        	public void run() {
+//        		chart = new LineChart(createMPGTable(null), createOptions());
+//        		chart.addSelectHandler(createSelectHandler(chart));
+//        		vizVP.add(chart);
+//        	}
+//        };
+//        VisualizationUtils.loadVisualizationApi(onLoadCallback, LineChart.PACKAGE);
+        gAvg = new Grid(3, 2);
+        gAvg.setWidget(0, 0, hdgAvgYear);
+        gAvg.setWidget(0, 1, tbAvgYear);
+        gAvg.setWidget(1, 0, hdgAvgMake);
+        gAvg.setWidget(1, 1, tbAvgMake);
+        gAvg.setWidget(2, 0, hdgAvgModel);
+        gAvg.setWidget(2, 1, tbAvgModel);
+        avgButton.addStyleName("sendButton");
+        avgButton.addClickHandler(this);
+
+        vizVP.add(gAvg);
+        vizVP.add(avgButton);
+        vizVP.add(avgTable);
+        
+        // set up avgTable
+        NumberCell yearCell = new NumberCell(NumberFormat.getFormat("####0"));
+        Column<MPGAverage, Number> yearColumn = new Column<MPGAverage, Number>(yearCell) {
+
+			@Override
+			public Number getValue(MPGAverage object) {
+				return object.getYear();
+			}
+        	
+        };
+        avgTable.addColumn(yearColumn, "Year");
+        
+        TextColumn<MPGAverage> makeColumn = new TextColumn<MPGAverage>() {
+
+			@Override
+			public String getValue(MPGAverage object) {
+				return object.getMake();
+			}
+        	
+        };
+        avgTable.addColumn(makeColumn, "Make");
+        
+        TextColumn<MPGAverage> modelColumn = new TextColumn<MPGAverage>() {
+
+			@Override
+			public String getValue(MPGAverage object) {
+				return object.getModel();
+			}
+        	
+        };
+        avgTable.addColumn(modelColumn, "Model");
+        
+        NumberCell avgCell = new NumberCell(NumberFormat.getFormat("##0.##"));
+        Column<MPGAverage, Number> avgColumn = new Column<MPGAverage, Number>(avgCell) {
+
+			@Override
+			public Number getValue(MPGAverage object) {
+				return object.getMpgAverage();
+			}
+        	
+        };
+        avgTable.addColumn(avgColumn, "True MPG");
+        avgTable.setRowData(new ArrayList<MPGAverage>());
 
         // login panel
         HTML hdgUser = new HTML("Username:");
@@ -188,6 +397,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         aboutFP.add(aboutText);
 
         // set up panels in tabs
+        mainMenu.add(vizVP, "Research");
         mainMenu.add(loginVP, "Login");       
         mainMenu.add(aboutFP, "About");
     }
@@ -277,7 +487,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         mpgVP.addStyleName("dialogVPanel");
         mpgVP.add(hdgResults);
         mpgVP.add(new HTML("<b>This fillup: "+myMPG+" MPG</b>"));
-        mpgVP.add(new HTML("<br><b>Crowd Average: "+ avgMPG+" MPG</b>"));
+        mpgVP.add(new HTML("<br><b>This Average: "+ avgMPG+" MPG</b>"));
         mpgVP.add(againButton);
         mpgVP.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);        
         mpgVP.setVisible(true);
@@ -306,7 +516,11 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     {
         Widget sender = (Widget) event.getSource();
         // check which button is pressed
-        if (sender == loginButton)
+        if (sender == avgButton )
+        {
+        	readMPGAverages(tbAvgYear.getValue(), tbAvgMake.getValue(), tbAvgModel.getValue());
+        }
+        else if (sender == loginButton)
         {
             //TODO need to hook up to google authentication
             userName = tbUser.getText();
@@ -323,7 +537,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             
             // add all other tabs now that they are logged in
             mainMenu.remove(aboutFP);
-            mainMenu.add(vehicleOuterVP, "Vehicles");
+            mainMenu.add(vehicleOuterVP, "My Vehicles");
             mainMenu.add(fillOuterVP, "Fill-up");
             mainMenu.add(aboutFP, "About");
 
@@ -356,9 +570,9 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         {
             // post fill up to database
             postFillupButton.setEnabled(false);
-            fillupPost = setFillupForm(myVehicles.getMyList().get(lbVehicle.getSelectedIndex()).getVehicleID(), 
-                    tbFillDate.getText(), tbGallons.getText(), tbOdometer.getText(), "0", "0");
-            postFillup(fillupPost);
+//            fillupPost = setFillupForm(myVehicles.getMyList().get(lbVehicle.getSelectedIndex()).getVehicleID(), 
+//                    tbFillDate.getText(), tbGallons.getText(), tbOdometer.getText(), null, null);
+//            postFillup(fillupPost);
         	postNewFillup();
         }
         else if (sender == againButton)
@@ -411,7 +625,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     {
     	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/fillups" );
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
-        int vidx = lbVehicle.getSelectedIndex();
+        final int vidx = lbVehicle.getSelectedIndex();
         if ( vidx == -1 ) return;
     	String fillupString = setFillupForm(lbVehicle.getValue(vidx), null, tbGallons.getValue(), tbOdometer.getValue(), null, null);
 
@@ -429,7 +643,8 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 								Response response) {
 							if (200 == response.getStatusCode()) {	
 								// show MPG
-					            showMPGResults();
+					            //showMPGResults();
+			                    readVehicleMPG(lbVehicle.getValue(vidx));
 							} else {
 								displayError("Error creating fillup ("
 										+ response.getStatusText() + ")");
@@ -523,6 +738,45 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
           myMPG =  Double.toString(jsMPG.doubleValue());
           avgMPG = Double.toString(msAvgMPG.doubleValue());
 
+      }
+    
+    /**
+     * Parses the JSOn back from reading all vehicles.
+     */
+    private List<MPGAverage> parseMPGAverageJSON(JSONArray array) {
+
+    	ArrayList<MPGAverage> mpgas = new ArrayList<MPGAverage>();
+        JSONValue jsonValue;
+        
+        for (int i=0; i<array.size(); i++) {
+          JSONObject jsObj;
+          JSONString jsMake, jsModel;
+          JSONNumber jsYear, jsAverage;
+          
+          if ((jsObj = array.get(i).isObject()) == null) continue;
+          
+          if ((jsonValue = jsObj.get("make")) == null) continue;
+          jsMake = jsonValue.isString();
+          
+          if ((jsonValue = jsObj.get("model")) == null) continue;
+          jsModel = jsonValue.isString();
+          
+          if ((jsonValue = jsObj.get("year")) == null) continue;
+          jsYear = jsonValue.isNumber();
+          
+          if ((jsonValue = jsObj.get("averageMpg")) == null) continue;
+          jsAverage = jsonValue.isNumber();
+          
+
+          MPGAverage avg = new MPGAverage();
+          avg.setMake(jsMake == null ? null : jsMake.stringValue());
+          avg.setYear(jsYear == null ? null :Integer.parseInt(jsYear.toString()));
+          avg.setModel(jsModel == null ? null : jsModel.stringValue());
+          avg.setMpgAverage(jsAverage == null ? null : jsAverage.doubleValue());
+
+          mpgas.add(avg);
+        }
+        return mpgas;
       }
     
     /**
@@ -686,6 +940,60 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
               });
             } catch (RequestException e) {
               displayError("mpg:other JSON error - "+e.getMessage()+e.getStackTrace());         
+            }
+    }
+    
+    /**
+     * Reads mpg for a vehicle.
+     */
+    private void readMPGAverages(String year, String make, String model)
+    {
+        String url = "/rest/mpgas";
+        if ( !"".equals(year) || !"".equals(make) || !"".equals(model)) url = url + "?";
+        if ( !"".equals(year) ) {
+        	url = url + "year=" + year;
+            if ( !"".equals(make) || !"".equals(model) ) url = url + "&";
+        }
+        if ( !"".equals(make) ) {
+        	url = url + "make=" + make;
+        	if ( !"".equals(model) ) url = url + "&";
+        }
+        if ( !"".equals(model) ) {
+        	url = url + "model=" + model;
+        }
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
+        //builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+
+        try {
+          Request request = builder.sendRequest(null, new RequestCallback() {
+            public void onError(Request request, Throwable exception) {
+               // Couldn't connect to server (could be timeout, SOP violation, etc.)  
+                displayError("mpga: Couldn't retrieve JSON - oh no");   
+            }
+
+            public void onResponseReceived(Request request, Response response) {
+              if (200 == response.getStatusCode()) {
+                  try {
+                      // parse the response text into JSON
+                      JSONValue jsonValue = JSONParser.parseLenient(response.getText());
+                      
+                        JSONArray jsonArray = jsonValue.isArray();
+                        
+                        if (jsonArray != null) {
+                            List<MPGAverage> mpgas = parseMPGAverageJSON(jsonArray);
+                            avgTable.setRowData(mpgas);
+                        }
+
+                    } catch (JSONException e) {
+                      displayError("mpga:Could not parse JSON - "+e.getMessage());
+                    }
+                  } else {
+                    displayError("mpga:Couldn't retrieve JSON (" + response.getStatusText() + ")");
+                  }
+                }       
+              });
+            } catch (RequestException e) {
+              displayError("mpga:other JSON error - "+e.getMessage()+e.getStackTrace());         
             }
     }
     

@@ -13,6 +13,7 @@
   <!-- Other module inherits                                      -->
   <inherits name="com.google.gwt.json.JSON" /> 
   <inherits name="com.google.gwt.http.HTTP" />
+  <inherits name="com.google.gwt.visualization.Visualization"/>
 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='com.ugtug.truempg.web.client.TrueMPG'/>
