@@ -1,5 +1,7 @@
 package com.ugtug.truempg.web.client;
 
+import java.util.Date;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -11,6 +13,7 @@ import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONException;
 import com.google.gwt.json.client.JSONNumber;
@@ -38,7 +41,7 @@ import com.ugtug.truempg.web.shared.VehicleList;
  * <p>Title: True MPG.</p>
  * <p>Description: Calculates your true MPG for your vehicles.</p>
  * <p>Copyright: Copyright (c) 2012</p>
- * @author Rene Dupre
+ * @author Rene Dupre / Jarrod Ribble
  * @version 1.0
  */
 public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
@@ -71,8 +74,9 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     private HTML hdgFillup = new HTML("Enter your Fillup Information:");    // heading for fill up panel
     private TextBox tbGallons = new TextBox();                              // gallons text box
     private TextBox tbOdometer = new TextBox();                             // odometer text box
+    private TextBox tbFillDate = new TextBox();                             // fill date
     private ListBox lbVehicle = new ListBox();                              // vehicle list
-    private Button sendButton = new Button("Send");                         // send button for posting fill up
+    private Button postFillupButton = new Button("Send");                         // send button for posting fill up
     private Button againButton = new Button("Fillup Again");                // again button for another fill up
     private VerticalPanel mpgVP = new VerticalPanel();                      // MPG results panel
 
@@ -91,7 +95,12 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 
     private String chosenVehicle;                                           // chosen vehicle name
     private String userName;                                                // user name
-    private VehicleList myVehicles = new VehicleList();                     // list of vehicles for this user
+    private VehicleList myVehicles;                                         // list of vehicles for this user
+    private String vehiclePost;                                             // vehicle post/form statement
+    private String fillupPost;                                              // post/form for fillup
+    private String todaysDate;                                              // todays date yyyy-mm-dd format
+    private String myMPG;                                                   // my car's mpg
+    private String avgMPG;                                                  // average mpg
 
 
     /**
@@ -99,12 +108,17 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     public void onModuleLoad() {
 
+        // get today's date
+        Date date = new Date();        
+        todaysDate = DateTimeFormat.getFormat("yyyy-MM-dd").format(date);
+        
         // set up main panel
         DockLayoutPanel appPanel = new DockLayoutPanel(Unit.EM);
         RootLayoutPanel.get().add(appPanel);
-        HTML hdgMain = new HTML("Real RPG");    
+        HTML hdgMain = new HTML("True RPG<br><br>");    
         hdgMain.setStyleName("bigText");
         appPanel.addNorth(hdgMain, 2);
+        appPanel.addWest(new HTML(" "), 2);
         appPanel.add(mainMenu);
 
         // set up individual panels for each tab
@@ -138,9 +152,9 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         // Fill up panel        
         HTML hdgVehicle = new HTML("Vehicle:");
         HTML hdgDate = new HTML("Fillup Date:");
-        HTML dateFilled = new HTML("06/27/2012");
         HTML hdgGallons = new HTML("Gallons:");
         HTML hdgOdometer = new HTML("Odometer:");
+        tbFillDate.setText(todaysDate);
 
         lbVehicle.setTitle("Pick a vehicle.");
         lbVehicle.addChangeHandler(this);
@@ -151,29 +165,26 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         gFillup.setWidget(0, 1, hdgVehicle);
         gFillup.setWidget(0, 2, lbVehicle);
         gFillup.setWidget(1, 1, hdgDate);
-        gFillup.setWidget(1, 2, dateFilled);
+        gFillup.setWidget(1, 2, tbFillDate);
         gFillup.setWidget(2, 1, hdgOdometer);
         gFillup.setWidget(2, 2, tbOdometer);
         gFillup.setWidget(3, 1, hdgGallons);
         gFillup.setWidget(3, 2, tbGallons);
 
-        sendButton.addStyleName("sendButton");
-        sendButton.addClickHandler(this);
+        postFillupButton.addStyleName("sendButton");
+        postFillupButton.addClickHandler(this);
         againButton.addStyleName("sendButton");
         againButton.addClickHandler(this);        
         
         fillupVP.add(hdgFillup);
         fillupVP.add(gFillup);
-        fillupVP.add(sendButton);
+        fillupVP.add(postFillupButton);
 
         fillOuterVP.add(fillupVP);
         fillOuterVP.add(mpgVP);
 
         // about panel
-        String aboutString = "Real MPG will calculate you real miles per gallon with each fill-up.<br><br>Simply enter your "+
-        "mileage and gallons to fill your car each time and we will calculate your MPG for that fill-up as well as the "+
-        "total MPG for your vehicle.  We will also compare your MPG to everyone else who owns that same vehicle.";
-        HTML aboutText = new HTML(aboutString);
+        HTML aboutText = new HTML(getAboutText());
         aboutFP.add(aboutText);
 
         // set up panels in tabs
@@ -213,6 +224,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         vehicleVP.add(addVehicleButton);
     }
     
+
     private void fillVehicleDropDown()
     {
         // set drop down for fill up
@@ -227,8 +239,9 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         chosenVehicle = myVehicles.getVehicleCount() == 0 ? null : myVehicles.getMyList().get(0).getVehicleName();
     }
 
+    
     /**
-     * Add new vehicle.
+     * Display Add new vehicle panel.
      */
     private void addNewVehicle()
     {
@@ -259,17 +272,17 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void showMPGResults()
     {
-        HTML hdgResults = new HTML("Your Real MPG for "+chosenVehicle+":");
+        HTML hdgResults = new HTML("Your True MPG for "+chosenVehicle+":");
         mpgVP.clear();
         mpgVP.addStyleName("dialogVPanel");
         mpgVP.add(hdgResults);
-        mpgVP.add(new HTML("<b>This fillup: 24.1 MPG</b>"));
-        mpgVP.add(new HTML("<br><b>Your Average:  22.3 MPG</b>"));
-        mpgVP.add(new HTML("<br><b>Crowd Average:  21.9 MPG</b>"));
+        mpgVP.add(new HTML("<b>This fillup: "+myMPG+" MPG</b>"));
+        mpgVP.add(new HTML("<br><b>Crowd Average: "+ avgMPG+" MPG</b>"));
         mpgVP.add(againButton);
         mpgVP.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);        
         mpgVP.setVisible(true);
-        fillupVP.setVisible(false);        
+        fillupVP.setVisible(false);
+        postFillupButton.setEnabled(true);
     }
 
     /**
@@ -302,6 +315,12 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             gLogin.setVisible(false);           // hide login info
             loggedIn.setHTML("You are logged in as "+userName);
 
+            // reset any fillup
+            mpgVP.setVisible(false);
+            tbGallons.setText("");
+            tbOdometer.setText("");
+            fillupVP.setVisible(true);
+            
             // add all other tabs now that they are logged in
             mainMenu.remove(aboutFP);
             mainMenu.add(vehicleOuterVP, "Vehicles");
@@ -309,15 +328,6 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             mainMenu.add(aboutFP, "About");
 
             readVehicleForUser();       // get list of vehicles for user
-            if (myVehicles.getVehicleCount() > 0)
-            {        
-                mainMenu.selectTab(fillOuterVP);       // go to this tab if user has vehicles
-            }
-            else
-            {
-                mainMenu.selectTab(vehicleOuterVP);      // else show vehicle list
-                addNewVehicle();
-            }
         }
         else if (sender == logoutButton)
         {
@@ -335,8 +345,20 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         {
             addNewVehicle();
         }
-        else if (sender == sendButton)
+        else if (sender == postVehicleButton)
         {
+            // get data from form and save it
+            postVehicleButton.setEnabled(false);
+            vehiclePost = setVehicleFormPost(userName, tbYear.getText(), tbMake.getText(), tbModel.getText(), tbVIN.getText());     
+            postVehicleForUser(vehiclePost);        // post/save it            
+        }  
+        else if (sender == postFillupButton)
+        {
+            // post fill up to database
+            postFillupButton.setEnabled(false);
+            fillupPost = setFillupForm(myVehicles.getMyList().get(lbVehicle.getSelectedIndex()).getVehicleID(), 
+                    tbFillDate.getText(), tbGallons.getText(), tbOdometer.getText(), "0", "0");
+            postFillup(fillupPost);
         	postNewFillup();
         }
         else if (sender == againButton)
@@ -346,18 +368,14 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             tbGallons.setText("");
             tbOdometer.setText("");
             fillupVP.setVisible(true);
-        }
-        else if (sender == postVehicleButton)
-        {
-        	postNewVehicle();
-        }  
+        } 
     }
     
     private void postNewVehicle()
     {
     	RequestBuilder builder = new RequestBuilder ( RequestBuilder.POST, "/rest/vehicles" );
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
-    	String vehicleString = setVehicle(userName, tbYear.getValue(), tbMake.getValue(), tbModel.getValue(), tbVIN.getValue());
+    	String vehicleString = setVehicleFormPost(userName, tbYear.getValue(), tbMake.getValue(), tbModel.getValue(), tbVIN.getValue());
 
 		try {
 			builder.sendRequest(vehicleString,
@@ -395,7 +413,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
         int vidx = lbVehicle.getSelectedIndex();
         if ( vidx == -1 ) return;
-    	String fillupString = setFillup(lbVehicle.getValue(vidx), null, tbGallons.getValue(), tbOdometer.getValue(), null, null);
+    	String fillupString = setFillupForm(lbVehicle.getValue(vidx), null, tbGallons.getValue(), tbOdometer.getValue(), null, null);
 
 		try {
 			builder.sendRequest(fillupString,
@@ -422,12 +440,15 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
 			displayError("Couldn't retrieve JSON - " + e.getMessage()
 					+ e.getStackTrace());
 		}
+
     }
 
     /**
-     * Puts together form string for post for Fillup.
+     * Puts together form string for post for Fill up.
+     * @return String the string of data to post for a fill up.
      */
-    private String setFillup(String inVehicleID, String inFillDate, String inGallons, String inMileage, 
+
+    private String setFillupForm(String inVehicleID, String inFillDate, String inGallons, String inMileage, 
             String inLatitude, String inLongitude)
     {
         String formString;
@@ -442,9 +463,10 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     }  
     
     /**
-     * Puts together form string for post for Fillup.
+     * Parses the JSOn back from reading all vehicles.
      */
     private void parseVehicleJSON(JSONArray array) {
+
         JSONValue jsonValue;
         myVehicles = new VehicleList();
         
@@ -468,6 +490,7 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
           jsYear = jsonValue.isNumber();
           
           if ((jsonValue = jsCar.get("vehicleId")) == null) continue;
+
           jsVehicleID = jsonValue.isNumber();
 
           Vehicle myCar = new Vehicle();
@@ -476,19 +499,42 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
           myCar.setVehicleID(jsVehicleID == null ? null : jsVehicleID.toString());
           myCar.setModel(jsModel == null ? null : jsModel.stringValue());
           myCar.setVin(jsVIN == null ? null : jsVIN.stringValue());
+
           myVehicles.addVehicle(myCar);
         }
+      }
+    
+    /**
+     * Parses the response from getting MPG for a vehicle.
+     */
+    private void parseMPGJSON(JSONValue array) {
+        JSONValue jsonValue;
+        myVehicles = new VehicleList();
+        
+          JSONObject jsCar = array.isObject();
+          JSONNumber jsMPG, msAvgMPG;
+          
+          jsonValue = jsCar.get("lastMpg");
+          jsMPG = jsonValue.isNumber();
+          
+          jsonValue = jsCar.get("vehicleAverageMpg");
+          msAvgMPG = jsonValue.isNumber();          
+         
+          myMPG =  Double.toString(jsMPG.doubleValue());
+          avgMPG = Double.toString(msAvgMPG.doubleValue());
 
       }
     
     /**
      * Puts together form string for post for new vehicle.
+     * @return String the string of data to post for a new vehicle.
      */
-    private String setVehicle(String userId, String inYear, String inMake, String inModel, String inVIN)
+    private String setVehicleFormPost(String inUserID, String inYear, String inMake, String inModel, 
+            String inVIN)
     {
         final String formString;
 
-        formString = "userId=" + userId + "&year=" + inYear +
+        formString = "userId=" + inUserID  + "&year=" + inYear +
         "&make=" + inMake + "&model="+inModel + "&vin="+inVIN;
 
         return formString;
@@ -499,9 +545,11 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void readVehicleForUser()
     {
+
         String url = "/rest/vehicles?userId=" + userName;
+
         RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
-        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+        //builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
 
         try {
           builder.sendRequest(null, new RequestCallback() {
@@ -520,6 +568,14 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
                       if (jsonArray != null) {
                         parseVehicleJSON(jsonArray);
                         fillVehicleLists();
+                        if (myVehicles.getVehicleCount() > 0)
+                        {        
+                            mainMenu.selectTab(fillOuterVP);       // go to this tab if user has vehicles
+                        }
+                        else
+                        {
+                            mainMenu.selectTab(vehicleOuterVP);      // else show vehicle list
+                        }
                       } else {
                         throw new JSONException(); 
                       }
@@ -534,6 +590,130 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
             } catch (RequestException e) {
               displayError("Couldn't retrieve JSON - "+e.getMessage()+e.getStackTrace());         
             }
+    }
+    
+    /**
+     * Saves new vehicle for a user.
+     * @param String vehicle data to post.
+     */
+    private void postVehicleForUser(String inPostData)
+    {
+        String url = "/rest/vehicles";
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, URL.encode(url));
+        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+
+        try {
+          Request request = builder.sendRequest(inPostData, new RequestCallback() {
+            public void onError(Request request, Throwable exception) {
+               // Couldn't connect to server (could be timeout, SOP violation, etc.)  
+                displayError("postVehicle Couldn't retrieve JSON - oh no");   
+            }
+
+            public void onResponseReceived(Request request, Response response) {
+                    //System.out.print("vehicle saved\n");
+                    addVehicleVP.setVisible(false);
+                    postVehicleButton.setEnabled(true);
+                    vehicleVP.setVisible(true);
+                    readVehicleForUser();               // just reread all vehicles for user
+                }       
+              });
+            } catch (RequestException e) {
+              displayError("postVehicle Couldn't retrieve JSON - "+e.getMessage()+e.getStackTrace());         
+            }
+    }
+    
+    /**
+     * Saves new vehicle fill up for a user.
+     * @param String fill up data to post.
+     */
+    private void postFillup(String inPostData)
+    {
+        String url = "/rest/fillups";
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, URL.encode(url));
+        builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+
+        try {
+          Request request = builder.sendRequest(inPostData, new RequestCallback() {
+            public void onError(Request request, Throwable exception) {
+               // Couldn't connect to server (could be timeout, SOP violation, etc.)  
+                displayError("postFillup on error on post - oh no");   
+            }
+
+            public void onResponseReceived(Request request, Response response) {
+                    //System.out.print("fillup saved\n");
+                    addVehicleVP.setVisible(false);
+                    vehicleVP.setVisible(true);
+                    readVehicleMPG(myVehicles.getMyList().get(lbVehicle.getSelectedIndex()).getVehicleID());
+                }       
+              });
+            } catch (RequestException e) {
+              displayError("postFillup post error - "+e.getMessage()+e.getStackTrace());         
+            }
+    }
+    
+    /**
+     * Reads mpg for a vehicle.
+     */
+    private void readVehicleMPG(String inVehicleID)
+    {
+        String url = "/rest/vehicles/"+inVehicleID+"/mpg";
+        RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, URL.encode(url));
+        //builder.setHeader("Content-Type","application/x-www-form-urlencoded"); 
+
+        try {
+          Request request = builder.sendRequest(null, new RequestCallback() {
+            public void onError(Request request, Throwable exception) {
+               // Couldn't connect to server (could be timeout, SOP violation, etc.)  
+                displayError("mpg: Couldn't retrieve JSON - oh no");   
+            }
+
+            public void onResponseReceived(Request request, Response response) {
+              if (200 == response.getStatusCode()) {
+                  try {
+                      // parse the response text into JSON
+                      JSONValue jsonValue = JSONParser.parseLenient(response.getText());
+                      
+                        parseMPGJSON(jsonValue);
+                        showMPGResults();
+
+                    } catch (JSONException e) {
+                      displayError("mpg:Could not parse JSON - "+e.getMessage());
+                    }
+                  } else {
+                    displayError("mpg:Couldn't retrieve JSON (" + response.getStatusText() + ")");
+                  }
+                }       
+              });
+            } catch (RequestException e) {
+              displayError("mpg:other JSON error - "+e.getMessage()+e.getStackTrace());         
+            }
+    }
+    
+    private String getAboutText()
+    {
+        String aboutTxt = "Google IO 2012 Hackathon to solve social challenges: Go Green - Croud source real MPG for vehicles "+
+        "depending on location.  <br><br> For the hackathon, the project started with three people at an extended google io event. "+
+        "The purpose of this code is to allow participants to see what the average person in their area really gets for a MPG given "+
+        "their vehicle. It's an idea similar to benchmarking devices. The more people contributing real live information, the more "+
+        "accurate the information will be. This is especially true given that driving habits and conditions differ greatly depending"+
+        "on location. <br><br>"+
+        "  Use case: Someone with an android phone fills up their gas tank. They open up the android app and login"+
+        "just using their email address as an identifier. They then enter their mileage, number of gallons they filled up with, and "+
+        "an auto-calculated date/GPS coordinate pair. The app then sends this data to the main datastore. Later, after many people "+
+        "have contributed this kind of data, they load the website, and can browse for a given city what the average MPG is for a "+
+        "make/model/year/etc of vehicle. Reports could be run to show MPG differences for cities that are mostly city vs those with "+
+        "highways, and these costs could be factored into cost of living expenses. This data could also be used to show which cities "+
+        "really are greener than others.<br> This project is made up of three parts: A server backend (that can run on Google's AppEngine)"+
+        ". This is the main datastore. A frontend, that allows data to be entered probably from desktop/laptop computers. A frontend" +
+        " (that can be run from Android devices), that allows data to be entered from mobile devices like phones.<br><br>"+
+        "The initial work took place during the hackathon which lasted roughly four hours. The base apps exist, with communication"+
+        "taking place between them. There are however 1-2 more web service calls that must be added in order for the apps to "+
+        "work/become useful. The infrastructure however, is there and functioning. Each of the three participants worked on one "+
+        "of the three items listed above such that work could be done in parallel. This is the reason that they are not starting "+
+        "out completely integrated, and have some redundancy.<br><br>"+
+        "Overall, there are two main domain model objects: Vehicle (make, model, year, vin) Fillup data (gallons, mileage, date"+
+        ", gps coordinates)";
+        return aboutTxt;
     }
     
     private void displayError(String error) {

@@ -28,8 +28,8 @@ public class Vehicle {
      * Constructor with data.
      */
     public Vehicle(String inID, String inYear, String inMake, String inModel, String inVIN){
-        this.vehicleID = inID;
-        this.vehicleYear = inYear;
+        setVehicleID(inID);
+        setVehicleYear(inYear);
         this.make = inMake;
         this.model = inModel;
         this.vin = inVIN;
@@ -89,6 +89,12 @@ public class Vehicle {
      * @param vehicleID the vehicleID to set.
      */
     public void setVehicleID(String vehicleID) {
+        // if there is a decimal point in year, remove it
+        int dot = vehicleID.indexOf('.');
+        if (dot != -1)
+        {
+            vehicleID = vehicleID.substring(0, dot);
+        }
         this.vehicleID = vehicleID;
     }
 
@@ -97,6 +103,12 @@ public class Vehicle {
      * @param vehicleYear the vehicleYear to set.
      */
     public void setVehicleYear(String vehicleYear) {
+        // if there is a decimal point in year, remove it
+        int dot = vehicleYear.indexOf('.');
+        if (dot != -1)
+        {
+            vehicleYear = vehicleYear.substring(0, dot);
+        }
         this.vehicleYear = vehicleYear;
     }
 
