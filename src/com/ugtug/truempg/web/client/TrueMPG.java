@@ -486,8 +486,8 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
         mpgVP.clear();
         mpgVP.addStyleName("dialogVPanel");
         mpgVP.add(hdgResults);
-        mpgVP.add(new HTML("<b>This fillup: "+myMPG+" MPG</b>"));
-        mpgVP.add(new HTML("<br><b>This Average: "+ avgMPG+" MPG</b>"));
+        mpgVP.add(new HTML("<b>This fillup: "+(myMPG == null ? "N/A" : myMPG)+" MPG</b>"));
+        mpgVP.add(new HTML("<br><b>This Average: "+ (avgMPG == null ? "N/A" : avgMPG)+" MPG</b>"));
         mpgVP.add(againButton);
         mpgVP.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);        
         mpgVP.setVisible(true);
@@ -724,7 +724,6 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
      */
     private void parseMPGJSON(JSONValue array) {
         JSONValue jsonValue;
-        myVehicles = new VehicleList();
         
           JSONObject jsCar = array.isObject();
           JSONNumber jsMPG, msAvgMPG;
@@ -735,8 +734,8 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
           jsonValue = jsCar.get("vehicleAverageMpg");
           msAvgMPG = jsonValue.isNumber();          
          
-          myMPG =  Double.toString(jsMPG.doubleValue());
-          avgMPG = Double.toString(msAvgMPG.doubleValue());
+          myMPG =  jsMPG == null ? null : Double.toString(jsMPG.doubleValue());
+          avgMPG = msAvgMPG == null ? null : Double.toString(msAvgMPG.doubleValue());
 
       }
     
@@ -999,28 +998,23 @@ public class TrueMPG implements EntryPoint, ChangeHandler, ClickHandler {
     
     private String getAboutText()
     {
-        String aboutTxt = "Google IO 2012 Hackathon to solve social challenges: Go Green - Croud source real MPG for vehicles "+
-        "depending on location.  <br><br> For the hackathon, the project started with three people at an extended google io event. "+
-        "The purpose of this code is to allow participants to see what the average person in their area really gets for a MPG given "+
-        "their vehicle. It's an idea similar to benchmarking devices. The more people contributing real live information, the more "+
-        "accurate the information will be. This is especially true given that driving habits and conditions differ greatly depending"+
-        "on location. <br><br>"+
-        "  Use case: Someone with an android phone fills up their gas tank. They open up the android app and login"+
-        "just using their email address as an identifier. They then enter their mileage, number of gallons they filled up with, and "+
-        "an auto-calculated date/GPS coordinate pair. The app then sends this data to the main datastore. Later, after many people "+
-        "have contributed this kind of data, they load the website, and can browse for a given city what the average MPG is for a "+
-        "make/model/year/etc of vehicle. Reports could be run to show MPG differences for cities that are mostly city vs those with "+
-        "highways, and these costs could be factored into cost of living expenses. This data could also be used to show which cities "+
-        "really are greener than others.<br> This project is made up of three parts: A server backend (that can run on Google's AppEngine)"+
-        ". This is the main datastore. A frontend, that allows data to be entered probably from desktop/laptop computers. A frontend" +
-        " (that can be run from Android devices), that allows data to be entered from mobile devices like phones.<br><br>"+
-        "The initial work took place during the hackathon which lasted roughly four hours. The base apps exist, with communication"+
-        "taking place between them. There are however 1-2 more web service calls that must be added in order for the apps to "+
-        "work/become useful. The infrastructure however, is there and functioning. Each of the three participants worked on one "+
-        "of the three items listed above such that work could be done in parallel. This is the reason that they are not starting "+
-        "out completely integrated, and have some redundancy.<br><br>"+
-        "Overall, there are two main domain model objects: Vehicle (make, model, year, vin) Fillup data (gallons, mileage, date"+
-        ", gps coordinates)";
+        String aboutTxt = "Google IO 2012 Hackathon to solve social challenges: Go Green - Crowd source real MPG for vehicles depending on location<br><br>" +
+        "The idea behind this application is to provide a simple tool to calculate vehicle fuel efficiency.  Using an app on their Android device,"+
+        "a person keeps track of mileage and amount of fuel each time he fill up.  The app calculates fuel efficiency.  It's simple and convenient.<br><br>"+
+        "This in itself isn't very powerful.  But as people use this app it fuels a growing corpus of data about fuel efficiency per model year," +
+        "make, model, date, and location.  This data can then be used by consumers to make purchasing decisions using real world fuel efficiency " +
+        "information; by governments to refine policies such as required or regulated fuel additives and taxes, and by engineers when designing and " +
+        "refining vehicles.<br><br>"+
+        "The application is live at <a href=\"http://truefuelefficiency.appspot.com\">http://truefuelefficiency.appspot.com</a>, "+
+        "code at <a href=\"https://github.com/jribble/trueMPG\">https://github.com/jribble/trueMPG</a>.  The Android application can be found at "+
+        "<a href=\"https://github.com/shellum/io2012hackathon\">https://github.com/shellum/io2012hackathon</a>.  A compiled APK is hiding in there in androidApp/bin.<br><br>"+
+        "For the hackathon, the project started with three people, previously strangers, at Google I/O Extended 2012 Utah.<br><br>" +
+        "This project is made up of three parts:<br>"+
+        "A server backend running on AppEngine, using Objectify and Jersey. This is the main datastore.<br>"+
+        "A frontend written in GWT, that allows data to be entered probably from desktop/laptop computers.<br>"+
+        "A frontend that can be run from Android devices, that allows data to be entered from mobile devices like phones.<br><br>"+
+        "The applications are currently very rough.  It is more a proof of concept than anything else.  But we believe the idea has "+
+        "merit and aims to affect real change with the biggest consumer of fossil fuels - the cars we drive.";
         return aboutTxt;
     }
     
